@@ -1,7 +1,15 @@
+#!/usr/bin/env perl
+# 
+# Filename: StartGame.pl
+# Author: Chakravarthy Marella
+# Copyright (C) 2011 Chakravarthy Marella, all rights reserved.
+# First Created: Nov 11 , 2011
+# Code:
+
 use strict;
 use warnings;
 
-print "\nOn a scale of 1 to 5, choose easy, medium or hard\n1 -> Easy, 5 -> Very Hard : ";  
+print "\nChoose an integer between 1 to 3\n1 -> Easy, 2 -> Medium, 3 -> Hard : ";  
 my $hard = <stdin>; if ($hard =~ m/^\d{1}$/){chomp($hard);}else {die "Wrong Choice.. game ends\n";}
 
 my $initial_state=&initial_state;
@@ -18,7 +26,9 @@ my $matrix = \@matrix;
 my ($x,$y,$z) = &scores($matrix);
 $y = int($y);
 if ($x < 1) {print "You won !! ($z:$y)\n\n";}
-else {print "computer won !! $y:$z\n\n";}
+else {print "computer won !! ($y:$z)\n\n";}
+
+if ($z<5) {print "\nThat was brilliant\n\n";}
 
 ####
 
@@ -55,7 +65,7 @@ sub game {
 	$_ = @{$legal_moves}; 
 	if ($_ != 0) {
 		$w=1;
-		$returned_game_state = &computer($returned_game_state);
+		$returned_game_state = &computer($returned_game_state,$legal_moves);
 		@my_matrix = @{$returned_game_state};	
 	}
 	else {$w=0;print "Oops, computer doesn't have any moves.";}
@@ -116,11 +126,12 @@ sub computer {
 
 	my $game_sub_state=$_[0];
 	my $dummy_play_or_real = 1;
+	my $legal_moves = $_[1];
 
 	my $copied_array = &array_copy($game_sub_state);
 	my @inherited_game_sub_state = @{$copied_array};
 
-	my ($move_to_play,$x,$y)=&game_tree(0,$game_sub_state);
+	my ($move_to_play,$x,$y)=&game_tree(0,$game_sub_state,$legal_moves);
 
 	$game_sub_state=&play(2,$move_to_play,\@inherited_game_sub_state,$dummy_play_or_real);
 	$move_to_play = convert_num_to_alphabet($move_to_play);
@@ -135,6 +146,7 @@ sub game_tree {
 	my $depth=$_[0];
 	$depth++;
 	my $inherited_game_sub_state = $_[1];
+	my $legal_moves = $_[2];
 
 	my $copied_array = &array_copy($inherited_game_sub_state);
 	my @inherited_game_sub_state = @{$copied_array};
@@ -146,10 +158,10 @@ sub game_tree {
 
 	$_ = &even_or_odd($depth);
 	if ($_==2) {
-		($best_move,$best_score)=&make_a_move(1,$depth,\@my_matrix);# Makes move for player
+		($best_move,$best_score)=&make_a_move(1,$depth,\@my_matrix,$legal_moves);# Makes move for player
 	}
 	else {	
-		($best_move,$best_score)=&make_a_move(2,$depth,\@my_matrix);# Makes move for computer
+		($best_move,$best_score)=&make_a_move(2,$depth,\@my_matrix,$legal_moves);# Makes move for computer
 	}
 	return ($best_move,$best_score,\@inherited_game_sub_state);
 }
@@ -160,6 +172,7 @@ sub make_a_move {
 
 	my $depth=$_[1]; 
 	my $inherited_game_sub_state = $_[2];
+	my $legal_moves = $_[3];
 
 	my $dummy_play_or_real = 1 ;
 	my (@best_moves,@best_scores);
@@ -172,19 +185,24 @@ sub make_a_move {
 
 	my $move; my ($best_move,$best_score);
 	my $returned_game_sub_state;
-	my @scores;
+	my @scores;my $opponent;
 
-	my ($legal_moves,$x) = &legal_moves($player,\@inherited_game_sub_state);
+	if ($player == 1) { $opponent = 2;}
+	elsif ($player == 2) { $opponent = 1;}
+
+	#my ($legal_moves,$x) = &legal_moves($player,\@inherited_game_sub_state);
 
 	foreach $move (@{$legal_moves}) {
 
 		my $my_matrix = &array_copy($inherited_game_sub_state);
 		my @my_matrix = @{$my_matrix};
-
 		$returned_game_sub_state = &play($player,$move,\@my_matrix,$dummy_play_or_real);	
 
-		if (($depth<$hard)and($_>0)){					
-			($best_move,$best_score,$returned_game_sub_state) = &game_tree($depth,$returned_game_sub_state);
+		my($legal_moves,$x) = &legal_moves($opponent,$returned_game_sub_state);
+		$_ = @{$legal_moves};
+
+		if (($depth<$hard)and($_>0)){	
+			($best_move,$best_score,$returned_game_sub_state) = &game_tree($depth,$returned_game_sub_state,$legal_moves);
 			push (@scores, $best_score);
 		}
 		else {											
