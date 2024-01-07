@@ -1,8 +1,8 @@
 #!/usr/bin/env perl
 # 
 # Filename: StartGame.pl
-# Author: Chakravarthy Marella
-# Copyright (C) 2011 Chakravarthy Marella, all rights reserved.
+# Author: Nara Marella
+# Copyright (C) Nara Marella, all rights reserved.
 # First Created: Nov 11 , 2011
 # Code:
 
